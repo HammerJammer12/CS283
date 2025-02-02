@@ -106,11 +106,14 @@ Please answer the following questions and submit in your repo for the second ass
 
     - Please explain why the file size reported by the `ls` command was 128 bytes after adding student with ID=1, 256 after adding student with ID=3, and 4160 after adding the student with ID=64? 
 
-        > **ANSWER:** _start here_
+        > **ANSWER:** ls includes space from "holes" in a sparse file, after adding ID=1 theres 64 bytes for the student
+		  > and another 64 of metadata. ID=3 has another 64 bytes for the student and 64 for the "hole" where ID=2 would
+		  > go. ID=64 creates a much bigger hole due to the difference between 3 and 64.
 
     -   Why did the total storage used on the disk remain unchanged when we added the student with ID=1, ID=3, and ID=63, but increased from 4K to 8K when we added the student with ID=64? 
 
-        > **ANSWER:** _start here_
+        > **ANSWER:** the file system allocates one 4K block at a time, everything from ID=1 through ID=63 fits in that
+		  > 4K block, but at ID=64 the file system has to allocate another block
 
     - Now lets add one more student with a large student ID number  and see what happens:
 
@@ -123,4 +126,5 @@ Please answer the following questions and submit in your repo for the second ass
         ```
         We see from above adding a student with a very large student ID (ID=99999) increased the file size to 6400000 as shown by `ls` but the raw storage only increased to 12K as reported by `du`.  Can provide some insight into why this happened?
 
-        > **ANSWER:**  _start here_
+        > **ANSWER:** since the size of the hole this student would create is very large, the file system knows not to allocate that "empty" space
+		  > to physical memory.
