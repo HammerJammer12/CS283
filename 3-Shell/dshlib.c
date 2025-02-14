@@ -34,6 +34,83 @@
  */
 int build_cmd_list(char *cmd_line, command_list_t *clist)
 {
-    printf(M_NOT_IMPL);
-    return EXIT_NOT_IMPL;
+	if (!cmd_line || !clist){
+		return ERR_CMD_OR_ARGS_TOO_BIG;
+	}
+
+	if (*cmd_line == 0){
+		return WARN_NO_CMDS; 
+	}
+
+	memset(clist, 0, sizeof(command_list_t));
+
+	char *cmdCopy = strdup(cmd_line);
+	if(!cmdCopy){
+		return ERR_CMD_OR_ARGS_TOO_BIG;
+	}
+
+	char *cmdCopySave;
+	char *cmdToken = strtok_r(cmdCopy, PIPE_STRING, &cmdCopySave);
+	int cmdCount = 0;
+
+	while (cmdToken){
+		while (*cmdToken == SPACE_CHAR) cmdToken++;
+
+		char *end = cmdToken + strlen(cmdToken) - 1;
+		while (end > cmdToken && *end == SPACE_CHAR){
+			*end = '\0';
+			end--;
+		}
+
+		if (*cmdToken == '\0'){ 
+      	cmdToken = strtok(NULL, PIPE_STRING);
+		//	printf("DEBUF: testing cmdToken [%s}\n", cmdToken);
+      	continue;
+		}
+
+		//printf("DEBUG: Processing command: [%s]\n", cmdToken);
+
+		if (cmdCount >= CMD_MAX){
+			free(cmdCopy);
+			return ERR_TOO_MANY_COMMANDS;
+		}
+
+		command_t *cmd = &clist->commands[cmdCount];
+		memset(cmd, 0, sizeof(command_t));
+
+		char *argToken = strtok(cmdToken, " ");
+		if (!argToken){
+			free(cmdCopy);
+			return ERR_CMD_OR_ARGS_TOO_BIG;
+		}
+		
+		strncpy(cmd->exe, argToken, EXE_MAX);
+		cmd->exe[EXE_MAX -1] = '\0';
+
+		cmd->args[0] = '\0';
+		char *args = cmd->args;
+		int argLen = 0;
+
+		while ((argToken = strtok(NULL, " ")) != NULL){
+			int tokenLen = strlen(argToken);
+			if (argLen + tokenLen + 1 >= ARG_MAX) {
+				break;
+			}
+			if (argLen > 0) {
+				args[argLen++] = ' ';
+			}
+			strncpy(args + argLen, argToken, tokenLen);
+			argLen += tokenLen;
+		}
+		args[argLen] = '\0';
+
+		cmdCount++;
+		cmdToken = strtok_r(cmdCopySave, PIPE_STRING, &cmdCopySave);
+	   //printf("DEBUG: END OF LOOP CMDTOKEN: [%s]\n", cmdToken);
+	}
+
+	clist->num = cmdCount;
+	free(cmdCopy);
+
+	return OK;
 }
